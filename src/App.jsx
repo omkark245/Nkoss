@@ -12,6 +12,7 @@ import {
   HeartHandshake,
   Library,
   Mail,
+  Menu,
   MessageCircle,
   MapPin,
   Phone,
@@ -21,6 +22,7 @@ import {
   UserCheck,
   Trophy,
   Users,
+  X,
 } from "lucide-react";
 
 const routes = ["/", "/about", "/facilities", "/academics", "/teachers", "/fees", "/admission", "/contact"];
@@ -198,6 +200,33 @@ function getRoutePath() {
 }
 
 function Header({ path, navigate }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [path]);
+
+  useEffect(() => {
+    if (!isMenuOpen) {
+      return undefined;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isMenuOpen]);
+
   return (
     <header className="sticky top-0 z-50 border-b border-orange-100 bg-[#fffaf3]/95 backdrop-blur">
       <div className="section-shell">
@@ -240,30 +269,84 @@ function Header({ path, navigate }) {
             <CalendarCheck className="h-4 w-4" />
             View Fees
           </Link>
-        </div>
 
-        <nav className="flex w-full min-w-0 max-w-[calc(100vw-2rem)] gap-2 overflow-x-auto pb-3 lg:hidden" aria-label="Mobile navigation">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              className={`focus-ring shrink-0 rounded-md border px-3 py-2 text-xs font-bold ${
-                path === item.href
-                  ? "border-ink bg-ink text-white"
-                  : "border-orange-100 bg-white text-slate-700"
-              }`}
-              href={item.href}
-              navigate={navigate}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+          <button
+            aria-expanded={isMenuOpen}
+            aria-label="Open navigation menu"
+            className="focus-ring inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-orange-200 bg-white text-ink shadow-sm lg:hidden"
+            type="button"
+            onClick={() => setIsMenuOpen(true)}
+          >
+            <Menu className="h-6 w-6" aria-hidden="true" />
+          </button>
+        </div>
       </div>
+
+      {isMenuOpen && (
+        <div className="fixed inset-0 z-[60] lg:hidden" role="dialog" aria-modal="true" aria-label="Mobile navigation">
+          <button
+            aria-label="Close navigation menu"
+            className="absolute inset-0 bg-ink/55"
+            type="button"
+            onClick={() => setIsMenuOpen(false)}
+          />
+          <aside className="absolute right-0 top-0 flex h-screen w-[min(20rem,calc(100vw-2rem))] flex-col overflow-y-auto bg-[#fffaf3] p-5 shadow-2xl">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-ink text-white">
+                  <GraduationCap className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-black text-ink">NKOSS</p>
+                  <p className="truncate text-xs font-semibold text-slate-600">Solapur CBSE School</p>
+                </div>
+              </div>
+              <button
+                aria-label="Close navigation menu"
+                className="focus-ring inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-orange-200 bg-white text-ink"
+                type="button"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <X className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
+
+            <nav className="mt-6 grid gap-2" aria-label="Mobile navigation links">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  className={`focus-ring flex items-center justify-between rounded-md border px-4 py-3 text-sm font-black transition ${
+                    path === item.href
+                      ? "border-ink bg-ink text-white"
+                      : "border-orange-100 bg-white text-slate-700 hover:border-orange-200 hover:bg-orange-50"
+                  }`}
+                  href={item.href}
+                  navigate={navigate}
+                  onNavigate={() => setIsMenuOpen(false)}
+                >
+                  {item.label}
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+              ))}
+            </nav>
+
+            <Link
+              className="focus-ring mt-6 inline-flex items-center justify-center gap-2 rounded-md bg-orchid-500 px-4 py-3 text-sm font-black text-white transition hover:bg-orchid-600"
+              href="/admission"
+              navigate={navigate}
+              onNavigate={() => setIsMenuOpen(false)}
+            >
+              Admission Process
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </Link>
+          </aside>
+        </div>
+      )}
     </header>
   );
 }
 
-function Link({ href, navigate, children, className, ariaLabel }) {
+function Link({ href, navigate, children, className, ariaLabel, onNavigate }) {
   return (
     <a
       aria-label={ariaLabel}
@@ -272,6 +355,7 @@ function Link({ href, navigate, children, className, ariaLabel }) {
       onClick={(event) => {
         event.preventDefault();
         navigate(href);
+        onNavigate?.();
       }}
     >
       {children}
@@ -282,30 +366,30 @@ function Link({ href, navigate, children, className, ariaLabel }) {
 function HomePage({ navigate }) {
   return (
     <>
-      <section className="relative min-h-[calc(100vh-5rem)] overflow-hidden bg-ink text-white">
+      <section className="relative overflow-hidden bg-ink text-white">
         <img
-          className="absolute inset-0 h-full w-full object-cover"
-          src="/school-images/data2-images-digital_clasroom.jpg"
-          alt="Digital classroom learning at Nagesh Karajagi Orchid School"
+          className="absolute inset-0 h-full w-full object-cover object-center"
+          src="/school-images/data2-images-sl5.jpg"
+          alt="Nagesh Karajagi Orchid School campus building"
         />
-        <div className="absolute inset-0 bg-ink/72" />
+        <div className="absolute inset-0 bg-ink/70" />
         <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-ink to-transparent" />
-        <div className="section-shell relative grid min-h-[calc(100vh-5rem)] gap-10 py-16 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-          <div className="max-w-3xl">
-            <p className="mb-4 inline-flex items-center gap-2 rounded-md bg-white/12 px-3 py-2 text-sm font-bold text-orange-100 ring-1 ring-white/20">
+        <div className="section-shell relative grid min-h-[calc(100svh-5rem)] gap-8 py-12 sm:gap-10 sm:py-16 lg:grid-cols-[0.92fr_1.08fr] lg:items-center lg:py-20">
+          <div className="min-w-0 max-w-3xl">
+            <p className="mb-4 inline-flex max-w-full items-center gap-2 rounded-md bg-white/12 px-3 py-2 text-xs font-bold text-orange-100 ring-1 ring-white/20 sm:text-sm">
               <GraduationCap className="h-4 w-4" />
-              SonaShankar Dnyanvikas Trust's
+              <span className="min-w-0 break-words">SonaShankar Dnyanvikas Trust's</span>
             </p>
-            <h1 className="max-w-[22rem] text-4xl font-black leading-tight sm:max-w-none sm:text-5xl lg:text-7xl">
+            <h1 className="max-w-full text-3xl font-black leading-tight sm:max-w-[34rem] sm:text-5xl lg:max-w-[44rem] lg:text-6xl xl:text-7xl">
               Future-ready CBSE learning in Solapur.
             </h1>
-            <p className="mt-5 max-w-[21rem] text-base leading-8 text-orange-50 sm:max-w-2xl sm:text-lg">
+            <p className="mt-5 max-w-full text-sm leading-7 text-orange-50 sm:max-w-2xl sm:text-lg sm:leading-8">
               Nagesh Karajagi Orchid School combines strong academics, robotics exposure,
               digital classrooms, arts, sports, and value-based learning.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <button
-                className="focus-ring inline-flex items-center justify-center gap-2 rounded-md bg-orchid-500 px-5 py-3 text-sm font-black text-white transition hover:bg-orchid-600"
+                className="focus-ring inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-md bg-orchid-500 px-4 py-3 text-sm font-black text-white transition hover:bg-orchid-600 sm:w-auto sm:px-5"
                 type="button"
                 onClick={() => navigate("/admission")}
               >
@@ -313,7 +397,7 @@ function HomePage({ navigate }) {
                 <ArrowRight className="h-4 w-4" />
               </button>
               <button
-                className="focus-ring inline-flex items-center justify-center gap-2 rounded-md bg-white px-5 py-3 text-sm font-black text-ink transition hover:bg-orange-50"
+                className="focus-ring inline-flex w-full min-w-0 items-center justify-center gap-2 rounded-md bg-white px-4 py-3 text-sm font-black text-ink transition hover:bg-orange-50 sm:w-auto sm:px-5"
                 type="button"
                 onClick={() => navigate("/teachers")}
               >
@@ -323,18 +407,18 @@ function HomePage({ navigate }) {
             </div>
             <div className="mt-10 grid max-w-4xl grid-cols-2 gap-3 sm:grid-cols-4">
               {stats.map((stat) => (
-                <div key={stat.label} className="rounded-lg border border-white/15 bg-white/10 p-4 backdrop-blur">
-                  <p className="text-xl font-black sm:text-2xl">{stat.value}</p>
+                <div key={stat.label} className="min-w-0 rounded-lg border border-white/15 bg-white/10 p-3 backdrop-blur sm:p-4">
+                  <p className="whitespace-nowrap text-xl font-black">{stat.value}</p>
                   <p className="mt-1 text-xs font-semibold uppercase text-orange-100">{stat.label}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="grid gap-4 lg:self-end">
-            <div className="rounded-lg border border-white/15 bg-white/12 p-4 shadow-soft backdrop-blur">
+          <div className="grid min-w-0 gap-4 lg:self-end">
+            <div className="min-w-0 rounded-lg border border-white/15 bg-white/12 p-3 shadow-soft backdrop-blur sm:p-4">
               <img
-                className="h-56 w-full rounded-md object-cover"
+                className="aspect-[16/9] h-auto w-full rounded-md object-cover"
                 src="/school-images/images-pic12.jpg"
                 alt="Robotics lab at NKOSS"
               />
@@ -342,7 +426,7 @@ function HomePage({ navigate }) {
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-orchid-500 text-white">
                   <Cpu className="h-5 w-5" />
                 </span>
-                <div>
+                <div className="min-w-0">
                   <h2 className="text-xl font-black">Robotics Lab</h2>
                   <p className="mt-1 text-sm leading-6 text-orange-50">
                     Hands-on STEM learning for design, building, testing, and problem solving.
@@ -939,9 +1023,9 @@ function HomeFeature({ icon: Icon, title, copy, href, navigate }) {
 
 function MiniImageCard({ image, title }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-white/15 bg-white/10 p-3 backdrop-blur">
-      <img className="h-28 w-full rounded-md object-cover" src={image} alt={title} />
-      <p className="mt-3 text-sm font-black text-white">{title}</p>
+    <div className="min-w-0 overflow-hidden rounded-lg border border-white/15 bg-white/10 p-3 backdrop-blur">
+      <img className="aspect-[16/9] h-auto w-full rounded-md object-cover" src={image} alt={title} />
+      <p className="mt-3 break-words text-sm font-black text-white">{title}</p>
     </div>
   );
 }
